@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>掲示板(笑)</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <script src="/utils.js"></script>
+        <script src="/variables.js"></script>
+        <script src="/thread.js"></script>
+<script>
+let title = "";
+</script>
+
+<script>
+async function fetch_messages () {
+    console.log(`invoked ${(new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`);
+
+    // GET
+    const response = await fetch(`${gas_app_url}?type=get-thread-messages&title=${title}`);
+    const json_content = await response.json();
+
+    if (json_content.verdict === "ERROR") {
+        alert(`Failed fetch thread messages. Error: ${json_content.detail}`);
+        return;
+    }
+
+    const info = JSON.parse(localStorage.getItem("a_thread_info"));
+    info[title].data = json_content.data;
+    info[title].last_updated = `${Date.now()}`;
+
+    localStorage.setItem("a_thread_info", JSON.stringify(info));
+};
+
+function display_messages () {
+    const view = document.getElementById("viewer");
+    view.innerHTML = "";
+
+    const info = JSON.parse(localStorage.getItem("a_thread_info"))[title].data;
+    info.sort((a, b) => {
+        const ad = new Date(a.postdate);
+        const bd = new Date(b.postdate);
+        return bd - ad;
+    });
+
+    for (const post of info) {
+        viewer.innerHTML += `<div><p>名前: ${post.author} | ${post.postdate}</p><pre style="padding-left: 1em;">${post.message}</pre></div>`;
+    }
+}
+</script>
+
+<script>
+async function post_message () {
+    const textarea = document.getElementById("postdata");
+    const msg = escapeHtml(textarea.value);
+    if (msg === "") {
+        alert("メッセージが空です。");
+    }
+
+    textarea.value = "";
+    resize_textarea("postdata");
+
+    // POST
+    const response = await fetch(gas_app_url, {
+        method: "POST",
+        body: JSON.stringify({
+            type: "create-new-post",
+            data: {
+                title: `${title}`,
+                user: `${user}`,
+                date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
+                message: `${msg}`,
+            }
+        })
+    });
+
+    const json_content = await response.json();
+
+    if (json_content.verdict === "ERROR") {
+        alert(`Failed to post a message. Error: ${json_content.detail}`);
+    }
+}
+</script>
+
+<script>
+/* Entry point */
+async function main () {
+    // クエリパラメータ取得 + チェック
+    const query_param = getQuery();
+    if (!("title" in query_param)) {
+        alert("Query parameter title is not found.");
+        return;
+    }
+    title = query_param.title;
+
+    function check_thread () {
+        for (const thread of JSON.parse(localStorage.getItem("all_thread"))) {
+            if (thread.title == title) return true;
+        }
+        return false;
+    }
+    {
+        let ok = check_thread();
+        // 再度フェッチ
+        if (!ok) {
+            await fetch_all_thread();
+            ok = check_thread();
+        }
+
+        if (!ok) {
+            alert(`Thread ${title} doesn't exist.`);
+            return;
+        }
+    }
+
+    // localStorageの初期化
+    const info = JSON.parse(localStorage.getItem("a_thread_info"));
+    if (!(`${title}` in info)) info[title] = {};
+    if (!("last_updated" in info[title])) info[title].last_updated = 0;
+    if (!("data" in info[title])) info[title].data = [];
+    localStorage.setItem("a_thread_info", JSON.stringify(info));
+
+    // スレッド名表示
+    document.getElementById("thread_title").innerHTML = `${title}`;
+
+    // upload
+    const btn = document.getElementById("upload_button");
+    btn.addEventListener("click", async () => {await post_message(); await fetch_messages(); display_messages();});
+
+    // autoload
+    display_messages();
+    setInterval(async () => {
+        const js = JSON.parse(localStorage.getItem("a_thread_info"));
+        if (Date.now() - parseInt(js[title].last_updated) < time_interval_ms) {
+            return;
+        }
+        js[title].last_updated = `${Date.now()}`;
+        localStorage.setItem("a_thread_info", JSON.stringify(js));
+
+        await fetch_messages();
+        display_messages();
+    }, 1000 * 5);
+};
+
+document.addEventListener("DOMContentLoaded", () => main());
+</script>
+    </head>
+
+    <body>
+        <h1>スレッド名: <span id="thread_title"></span></h1>
+
+        <textarea id="postdata" style="resize: none; width: 50%; height: 3em;"></textarea>
+        <script>function resize_textarea (id) { const te = document.getElementById(id); te.style.height = "3em"; te.style.height = te.scrollHeight + "px"; }document.addEventListener("DOMContentLoaded", () => { resize_textarea("postdata"); document.getElementById("postdata").addEventListener("input", () => resize_textarea("postdata")); });</script>
+        <button id="upload_button">投稿</button>
+
+        <hr>
+        <h2>過去ログ(新着順)</h2>
+        <div id="viewer"></div>
+    </body>
+</html>

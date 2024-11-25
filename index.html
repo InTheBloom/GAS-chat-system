@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>掲示板(笑)</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="/utils.js"></script>
+        <script src="/variables.js"></script>
+        <script src="/thread.js"></script>
+
+<script>
+async function create_new_thread () {
+    const title_input = document.getElementById("thread_title");
+    const title = escapeHtml(title_input.value).trim();
+    if (title === "") {
+        alert("スレッドタイトルが空です。");
+        return;
+    }
+
+    if (!confirm(`スレッド名: ${title}で作成します。よろしいですか？`)) {
+        return;
+    }
+    title_input.value = "";
+
+    // POSTで作成リクエストを投げる
+    const response = await fetch(gas_app_url, {
+        method: "POST",
+        body: JSON.stringify({
+            type: "create-new-thread",
+            data: {
+                title: `${title}`,
+                user: `${user}`,
+                date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
+            }
+        })
+    });
+
+    const response_detail_json = await response.json();
+    if (response_detail_json.verdict === "OK") {
+        alert(`スレッド: ${title}が作成されました。`);
+        return;
+    }
+
+    alert(`スレッド作成に失敗しました。エラーメッセージ: ${response_detail_json.detail}`);
+}
+
+async function update_thread () {
+    await fetch_all_thread();
+    display_thread();
+}
+
+function display_thread () {
+    const viewer = document.getElementById("viewer");
+    viewer.innerHTML = "";
+
+    const all_thread = JSON.parse(window.localStorage.getItem("all_thread")).sort((a, b) => {
+        const dA = new Date(a.updated_at);
+        const dB = new Date(b.updated_at);
+        return dB - dA;
+    });
+    for (const thread of all_thread) {
+        viewer.innerHTML += `
+            <a href="thread/?title=${thread.title}" style="text-decoration: none;">
+            <div style="
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 10px;
+                margin: 10px 0;
+                background-color: #f9f9f9;
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+                font-family: Arial, sans-serif;
+            ">
+            <div style="font-size: 1.2em; font-weight: bold; color: #333;">
+                ${thread.title}
+            </div>
+            <div style="margin-top: 5px; color: #555;">
+            <span style="font-weight: bold;">Creator:</span> ${thread.creator}
+            </div>
+            <div style="margin-top: 5px; color: #777;">
+            <span style="font-weight: bold;">Last Update:</span> ${thread.updated_at}
+            </div>
+            </div>
+            </a>
+            `;
+    }
+}
+</script>
+
+<script>
+/* Entry point */
+function main () {
+    if (!storageAvailable("localStorage")) {
+        alert("localStorageが利用できません。");
+        return;
+    }
+
+    // スレッド作成場所
+    const btn = document.getElementById("create_thread_btn");
+    btn.addEventListener("click", async () => {await create_new_thread(); update_thread();});
+
+    // スレッド自動更新
+    display_thread();
+    interval_id = setInterval(() => {
+        if (Date.now() - parseInt(localStorage.getItem("last_thread_updated")) < time_interval_ms) {
+            return;
+        }
+        localStorage.setItem("last_thread_updated", `${Date.now()}`);
+        update_thread();
+    }, 1000 * 5);
+
+};
+
+document.addEventListener("DOMContentLoaded", () => main());
+</script>
+    </head>
+
+    <body>
+        <h1>掲示板(仮)</h1>
+
+        <h2>新しいスレッドを作成する</h2>
+        <label for="thread_title">スレッド名</label>
+        <input type="text" name="thread_title" id="thread_title">
+        <button id="create_thread_btn">スレッドを作成</button>
+
+        <hr>
+
+        <h2>スレッド一覧(新着順)</h2>
+        <div id="viewer"></div>
+    </body>
+</html>
