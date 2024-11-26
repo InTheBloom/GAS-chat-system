@@ -4,7 +4,7 @@ async function fetch_all_thread () {
     // GETクエリを飛ばす。
     const response = await fetch(`${gas_app_url}?type=get-all-threads`);
 
-    json_content = await response.json();
+    const json_content = await response.json();
     if (json_content.verdict === "OK") {
         localStorage.setItem("all_thread", JSON.stringify(json_content.data));
         return;

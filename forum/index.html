@@ -5,12 +5,17 @@
         <meta charset="utf-8">
         <title>掲示板(笑)</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script src="/utils.js"></script>
-        <script src="/variables.js"></script>
-        <script src="/thread.js"></script>
+        <script src="/forum/utils.js"></script>
+        <script src="/forum/variables.js"></script>
+        <script src="/forum/thread.js"></script>
 
 <script>
 async function create_new_thread () {
+    if (localStorage.getItem("user") === "") {
+        alert("スレッドを作成するには、ログインが必要です。");
+        return;
+    }
+
     const title_input = document.getElementById("thread_title");
     const title = escapeHtml(title_input.value).trim();
     if (title === "") {
@@ -30,7 +35,7 @@ async function create_new_thread () {
             type: "create-new-thread",
             data: {
                 title: `${title}`,
-                user: `${user}`,
+                user: `${localStorage.getItem("user")}`,
                 date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
             }
         })

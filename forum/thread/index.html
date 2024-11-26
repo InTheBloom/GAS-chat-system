@@ -6,9 +6,9 @@
         <title>掲示板(笑)</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <script src="/utils.js"></script>
-        <script src="/variables.js"></script>
-        <script src="/thread.js"></script>
+        <script src="/forum/utils.js"></script>
+        <script src="/forum/variables.js"></script>
+        <script src="/forum/thread.js"></script>
 <script>
 let title = "";
 </script>
@@ -22,7 +22,7 @@ async function fetch_messages () {
     const json_content = await response.json();
 
     if (json_content.verdict === "ERROR") {
-        alert(`Failed fetch thread messages. Error: ${json_content.detail}`);
+        alert(`スレッドの取得でエラーが発生しました。 Error: ${json_content.detail}`);
         return;
     }
 
@@ -52,10 +52,16 @@ function display_messages () {
 
 <script>
 async function post_message () {
+    if (localStorage.getItem("user") === "") {
+        alert("メッセージの投稿にはログインが必要です。");
+        return;
+    }
+
     const textarea = document.getElementById("postdata");
     const msg = escapeHtml(textarea.value);
     if (msg === "") {
         alert("メッセージが空です。");
+        return;
     }
 
     textarea.value = "";
@@ -68,7 +74,7 @@ async function post_message () {
             type: "create-new-post",
             data: {
                 title: `${title}`,
-                user: `${user}`,
+                user: `${localStorage.getItem("user")}`,
                 date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
                 message: `${msg}`,
             }
@@ -78,7 +84,7 @@ async function post_message () {
     const json_content = await response.json();
 
     if (json_content.verdict === "ERROR") {
-        alert(`Failed to post a message. Error: ${json_content.detail}`);
+        alert(`メッセージの投稿でエラーが発生しました。 Error: ${json_content.detail}`);
     }
 }
 </script>
@@ -89,7 +95,7 @@ async function main () {
     // クエリパラメータ取得 + チェック
     const query_param = getQuery();
     if (!("title" in query_param)) {
-        alert("Query parameter title is not found.");
+        alert("クエリパラメータtitleが見つかりませんでした。");
         return;
     }
     title = query_param.title;
@@ -109,7 +115,7 @@ async function main () {
         }
 
         if (!ok) {
-            alert(`Thread ${title} doesn't exist.`);
+            alert(`スレッド: ${title}は存在しません。`);
             return;
         }
     }
