@@ -8,121 +8,199 @@
         <script src="/src/utils.js"></script>
         <script src="/src/variables.js"></script>
         <script src="/src/request.js"></script>
+        
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f2f5;
+                margin: 0;
+                padding: 0;
+            }
 
-<script>
-async function fetch_and_display_thread () {
-    try {
-        await fetch_all_thread();
-    }
-    catch (e) {
-        alert(e);
-        return;
-    }
-    display_thread();
-}
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
 
-function display_thread () {
-    // localStorageのデータをhtmlへ反映
-    const viewer = document.getElementById("viewer");
-    viewer.innerHTML = "";
+            h1 {
+                font-size: 2em;
+                font-weight: 700;
+                color: #333;
+                text-align: center;
+                margin-bottom: 20px;
+            }
 
-    const all_thread = (() => {
-        if (!localStorage.hasOwnProperty("all_thread")) {
-            return [];
-        }
-        return JSON.parse(localStorage.getItem("all_thread"))
-    })().sort((a, b) => {
-        const dA = new Date(a.updated_at);
-        const dB = new Date(b.updated_at);
-        return dB - dA;
-    });
-    for (const thread of all_thread) {
-        viewer.innerHTML += `
-            <a href="thread/?title=${thread.title}" style="text-decoration: none;">
-            <div style="
+            h2 {
+                font-size: 1.5em;
+                color: #444;
+            }
+
+            hr {
+                border: 1px solid #ddd;
+                margin: 20px 0;
+            }
+
+            label {
+                font-size: 1.2em;
+                color: #555;
+                display: block;
+                margin: 10px 0;
+            }
+
+            input[type="text"] {
+                width: 100%;
+                padding: 10px;
+                font-size: 1.1em;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                box-sizing: border-box;
+                margin-bottom: 20px;
+            }
+
+            button {
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                font-size: 1.1em;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: transform 0.2s ease, background-color 0.3s ease;
+            }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+            button:active {
+                transform: scale(0.97);
+            }
+
+            .thread-card {
                 border: 1px solid #ccc;
                 border-radius: 8px;
-                padding: 10px;
-                margin: 10px 0;
-                background-color: #f9f9f9;
-                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-                font-family: Arial, sans-serif;
-            ">
-            <div style="font-size: 1.2em; font-weight: bold; color: #333;">
-                ${thread.title}
-            </div>
-            <div style="margin-top: 5px; color: #555;">
-            <span style="font-weight: bold;">Creator:</span> ${thread.creator}
-            </div>
-            <div style="margin-top: 5px; color: #777;">
-            <span style="font-weight: bold;">Last Update:</span> ${thread.updated_at}
-            </div>
-            </div>
-            </a>
-            `;
-    }
-}
+                padding: 15px;
+                margin: 15px 0;
+                background-color: #fff;
+                box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                transition: box-shadow 0.3s ease;
+            }
 
-function try_update_thread () {
-    // 前回起動から5分以上時間があいていれば更新
-    const interval_ms = 1000 * 60 * 5;
-    if (Date.now() - parseInt(localStorage.getItem("last_thread_updated")) < interval_ms) {
-        return;
-    }
-    localStorage.setItem("last_thread_updated", `${Date.now()}`);
-    fetch_and_display_thread();
-}
-</script>
+            .thread-card:hover {
+                box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2);
+            }
 
-<script>
-/* Entry point */
-function main () {
-    if (!storageAvailable("localStorage")) {
-        alert("掲示板を利用するにはlocalStorageが有効である必要があります。");
-        return;
-    }
+            .thread-title {
+                font-size: 1.3em;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 8px;
+            }
 
-    // ボタンを押す -> スレッド作成
-    const btn = document.getElementById("create_thread_btn");
-    btn.addEventListener("click", async () => {
-        const title_input = document.getElementById("thread_title");
-        const title = escapeHtml(title_input.value).trim();
-        title_input.value = "";
-        try {
-            await create_new_thread(title);
+            .thread-info {
+                margin-bottom: 5px;
+                color: #555;
+            }
+
+            .thread-info span {
+                font-weight: bold;
+            }
+        </style>
+
+        <script>
+        async function fetch_and_display_thread() {
+            try {
+                await fetch_all_thread();
+            } catch (e) {
+                alert(e);
+                return;
+            }
+            display_thread();
         }
-        catch (e) {
-            alert(e);
-            return;
+
+        function display_thread() {
+            const viewer = document.getElementById("viewer");
+            viewer.innerHTML = "";
+
+            const all_thread = (() => {
+                if (!localStorage.hasOwnProperty("all_thread")) {
+                    return [];
+                }
+                return JSON.parse(localStorage.getItem("all_thread"));
+            })().sort((a, b) => {
+                const dA = new Date(a.updated_at);
+                const dB = new Date(b.updated_at);
+                return dB - dA;
+            });
+
+            for (const thread of all_thread) {
+                const threadHTML = `
+                    <a href="thread/?title=${thread.title}" style="text-decoration: none;">
+                        <div class="thread-card">
+                            <div class="thread-title">${thread.title}</div>
+                            <div class="thread-info"><span>Creator:</span> ${thread.creator}</div>
+                            <div class="thread-info"><span>Last Update:</span> ${thread.updated_at} (${formatRelativeTime(new Date(thread.updated_at))})</div>
+                        </div>
+                    </a>`;
+                viewer.innerHTML += threadHTML;
+            }
         }
-        fetch_and_display_thread();
-    });
 
-    // localStorage保存分を表示
-    display_thread();
+        function try_update_thread() {
+            const interval_ms = 1000 * 60 * 5;
+            if (Date.now() - parseInt(localStorage.getItem("last_thread_updated")) < interval_ms) {
+                return;
+            }
+            localStorage.setItem("last_thread_updated", `${Date.now()}`);
+            fetch_and_display_thread();
+        }
 
-    // スレッド自動更新トリガ
-    try_update_thread();
-    setInterval(() => {
-        try_update_thread();
-    }, 1000 * 5);
-};
+        function main() {
+            if (!storageAvailable("localStorage")) {
+                alert("掲示板を利用するにはlocalStorageが有効である必要があります。");
+                return;
+            }
 
-document.addEventListener("DOMContentLoaded", () => main());
-</script>
+            const btn = document.getElementById("create_thread_btn");
+            btn.addEventListener("click", async () => {
+                const title_input = document.getElementById("thread_title");
+                const title = escapeHtml(title_input.value).trim();
+                title_input.value = "";
+                try {
+                    await create_new_thread(title);
+                } catch (e) {
+                    alert(e);
+                    return;
+                }
+                fetch_and_display_thread();
+            });
+
+            display_thread();
+            try_update_thread();
+            setInterval(() => {
+                try_update_thread();
+            }, 1000 * 5);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => main());
+        </script>
     </head>
 
     <body>
-        <h1>掲示板(仮)</h1>
+        <div class="container">
+            <h1>掲示板(仮)</h1>
+            <hr>
 
-        <h2>新しいスレッドを作成する</h2>
-        <label for="thread_title">スレッド名</label>
-        <input type="text" name="thread_title" id="thread_title">
-        <button id="create_thread_btn">スレッドを作成</button>
+            <h2>新しいスレッドを作成する</h2>
+            <label for="thread_title">スレッド名</label>
+            <input type="text" name="thread_title" id="thread_title">
+            <button id="create_thread_btn">スレッドを作成</button>
 
-        <hr>
-
-        <h2>スレッド一覧(新着順)</h2>
-        <div id="viewer"></div>
+            <hr>
+            <h2>スレッド一覧(新着順)</h2>
+            <div id="viewer"></div>
+        </div>
     </body>
 </html>

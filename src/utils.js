@@ -49,3 +49,21 @@ function getQuery() {
 function is_login () {
     return localStorage.getItem("user") !== "";
 }
+
+// 投稿日時を相対的な形式（例：1分前、2時間前）で表示する関数
+function formatRelativeTime(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) {
+        return `${diffInSeconds}秒前`;
+    } else if (diffInSeconds < 3600) {
+        return `${Math.floor(diffInSeconds / 60)}分前`;
+    } else if (diffInSeconds < 86400) {
+        return `${Math.floor(diffInSeconds / 3600)}時間前`;
+    } else if (diffInSeconds < 2592000) {
+        return `${Math.floor(diffInSeconds / 86400)}日前`;
+    } else {
+        return `${Math.floor(diffInSeconds / 2592000)}ヶ月前`;
+    }
+}

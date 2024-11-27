@@ -1,14 +1,110 @@
 <!DOCTYPE html>
-
 <html lang="ja">
-    <head>
-        <meta charset="utf-8">
-        <title>掲示板(笑)</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="utf-8">
+    <title>掲示板(笑)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <script src="/src/utils.js"></script>
-        <script src="/src/variables.js"></script>
-        <script src="/src/request.js"></script>
+    <script src="/src/utils.js"></script>
+    <script src="/src/variables.js"></script>
+    <script src="/src/request.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+
+        #thread_title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        hr {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+
+        h2 {
+            font-size: 1.4em;
+            color: #333;
+        }
+
+        textarea {
+            resize: none;
+            width: 100%;
+            max-width: 600px;
+            height: 3em;
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:active {
+            background-color: #3e8e41;
+        }
+
+        #viewer > div {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            background-color: #fff;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #viewer div pre {
+            padding: 15px;
+            font-size: 0.95em;
+            color: #555;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+
+        #viewer div .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        #viewer div .post-header .author {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-right: 10px;
+        }
+
+        #viewer div .post-header .timestamp {
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
 <script>
 function get_thread_title () {
     const query_param = getQuery();
@@ -38,7 +134,7 @@ async function ensure_thread_exists (title) {
     throw new Error(`スレッド${title}は存在しません。`);
 }
 
-function display_messages (title) {
+function display_messages(title) {
     const view = document.getElementById("viewer");
     view.innerHTML = "";
 
@@ -55,7 +151,18 @@ function display_messages (title) {
     });
 
     for (const post of data) {
-        viewer.innerHTML += `<div><p>名前: ${post.author} | ${post.postdate}</p><pre style="padding-left: 1em;">${post.message}</pre></div>`;
+        const postDate = new Date(post.postdate);
+        const relativeTime = formatRelativeTime(postDate);
+
+        viewer.innerHTML += `
+            <div style="padding: 15px; border-bottom: 1px solid #ddd; background-color: #fff; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="font-weight: bold; color: #4CAF50; margin-right: 10px;">${post.author}</div>
+                    <div style="font-size: 0.9em; color: #888;">${post.postdate} (${relativeTime})</div>
+                </div>
+                <pre style="padding: 15px; font-size: 0.95em; color: #555; white-space: pre-wrap; word-wrap: break-word; background-color: #f8f8f8; border-radius: 5px;">${post.message}</pre>
+            </div>
+        `;
     }
 }
 
@@ -85,7 +192,6 @@ async function try_update_messages (title) {
 </script>
 
 <script>
-
 /* Entry point */
 async function main () {
     if (!storageAvailable("localStorage")) {
@@ -100,7 +206,9 @@ async function main () {
         await ensure_thread_exists(title);
     }
     catch (e) {
-        alert(`エラーが発生しました。 Error: ${e}`);
+        alert(`エラーが発生しました。 ${e}`);
+        // この段階のエラーはもう前ページに戻す。
+        window.location = forum_page;
         return;
     }
 
@@ -135,17 +243,40 @@ async function main () {
 
 document.addEventListener("DOMContentLoaded", () => main());
 </script>
-    </head>
+</head>
 
-    <body>
-        <h1>スレッド名: <span id="thread_title"></span></h1>
+<body>
+    <h1>スレッド名: <span id="thread_title"></span></h1>
 
-        <textarea id="postdata" style="resize: none; width: 50%; height: 3em;"></textarea>
-        <script>function resize_textarea (id) { const te = document.getElementById(id); te.style.height = "3em"; te.style.height = te.scrollHeight + "px"; }document.addEventListener("DOMContentLoaded", () => { resize_textarea("postdata"); document.getElementById("postdata").addEventListener("input", () => resize_textarea("postdata")); });</script>
+    <hr>
+
+    <h2>メッセージを投稿する</h2>
+    <div>
+        <textarea id="postdata"></textarea>
+    </div>
+    
+    <script>
+    function resize_textarea(id) { 
+        const te = document.getElementById(id); 
+        te.style.height = "3em"; 
+        te.style.height = te.scrollHeight + "px"; 
+    }
+    document.addEventListener("DOMContentLoaded", () => { 
+        resize_textarea("postdata"); 
+        document.getElementById("postdata").addEventListener("input", () => resize_textarea("postdata")); 
+    });
+    </script>
+    <div>
         <button id="upload_button">投稿</button>
+    </div>
 
-        <hr>
-        <h2>過去ログ(新着順)</h2>
-        <div id="viewer"></div>
-    </body>
+    <hr>
+
+    <h2>過去ログ(新着順)</h2>
+    <div id="viewer"></div>
+
+    <script>
+    // JavaScriptコードは省略しましたが、既存のものをそのまま使用可能です。
+    </script>
+</body>
 </html>
