@@ -5,61 +5,27 @@
         <meta charset="utf-8">
         <title>掲示板(笑)</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script src="/forum/utils.js"></script>
-        <script src="/forum/variables.js"></script>
-        <script src="/forum/thread.js"></script>
+        <script src="/src/utils.js"></script>
+        <script src="/src/variables.js"></script>
+        <script src="/src/request.js"></script>
 
 <script>
-async function create_new_thread () {
-    if (localStorage.getItem("user") === "") {
-        alert("スレッドを作成するには、ログインが必要です。");
-        return;
-    }
-
-    const title_input = document.getElementById("thread_title");
-    const title = escapeHtml(title_input.value).trim();
-    if (title === "") {
-        alert("スレッドタイトルが空です。");
-        return;
-    }
-
-    if (!confirm(`スレッド名: ${title}で作成します。よろしいですか？`)) {
-        return;
-    }
-    title_input.value = "";
-
-    // POSTで作成リクエストを投げる
-    const response = await fetch(gas_app_url, {
-        method: "POST",
-        body: JSON.stringify({
-            type: "create-new-thread",
-            data: {
-                title: `${title}`,
-                user: `${localStorage.getItem("user")}`,
-                date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
-            }
-        })
-    });
-
-    const response_detail_json = await response.json();
-    if (response_detail_json.verdict === "OK") {
-        alert(`スレッド: ${title}が作成されました。`);
-        return;
-    }
-
-    alert(`スレッド作成に失敗しました。エラーメッセージ: ${response_detail_json.detail}`);
-}
-
-async function update_thread () {
+async function fetch_and_display_thread () {
     await fetch_all_thread();
     display_thread();
 }
 
 function display_thread () {
+    // localStorageのデータをhtmlへ反映
     const viewer = document.getElementById("viewer");
     viewer.innerHTML = "";
 
-    const all_thread = JSON.parse(window.localStorage.getItem("all_thread")).sort((a, b) => {
+    const all_thread = (() => {
+        if (!localStorage.hasOwnProperty("all_thread")) {
+            return [];
+        }
+        return JSON.parse(localStorage.getItem("all_thread"))
+    })().sort((a, b) => {
         const dA = new Date(a.updated_at);
         const dB = new Date(b.updated_at);
         return dB - dA;
@@ -90,30 +56,44 @@ function display_thread () {
             `;
     }
 }
+
+function try_update_thread () {
+    // 前回起動から5分以上時間があいていれば更新
+    const interval_ms = 1000 * 60 * 5;
+    if (Date.now() - parseInt(localStorage.getItem("last_thread_updated")) < interval_ms) {
+        return;
+    }
+    localStorage.setItem("last_thread_updated", `${Date.now()}`);
+    fetch_and_display_thread();
+}
 </script>
 
 <script>
 /* Entry point */
 function main () {
     if (!storageAvailable("localStorage")) {
-        alert("localStorageが利用できません。");
+        alert("掲示板を利用するにはlocalStorageが有効である必要があります。");
         return;
     }
 
-    // スレッド作成場所
+    // ボタンを押す -> スレッド作成
     const btn = document.getElementById("create_thread_btn");
-    btn.addEventListener("click", async () => {await create_new_thread(); update_thread();});
+    btn.addEventListener("click", async () => {
+        const title_input = document.getElementById("thread_title");
+        const title = escapeHtml(title_input.value).trim();
+        title_input.value = "";
+        await create_new_thread(title);
+        fetch_and_display_thread();
+    });
 
-    // スレッド自動更新
+    // localStorage保存分を表示
     display_thread();
-    interval_id = setInterval(() => {
-        if (Date.now() - parseInt(localStorage.getItem("last_thread_updated")) < time_interval_ms) {
-            return;
-        }
-        localStorage.setItem("last_thread_updated", `${Date.now()}`);
-        update_thread();
-    }, 1000 * 5);
 
+    // スレッド自動更新トリガ
+    try_update_thread();
+    setInterval(() => {
+        try_update_thread();
+    }, 1000 * 5);
 };
 
 document.addEventListener("DOMContentLoaded", () => main());

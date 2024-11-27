@@ -1,14 +1,3 @@
-// initialize
-if (!localStorage.hasOwnProperty("last_thread_updated")) {
-    localStorage.setItem("last_thread_updated", "0");
-}
-if (!localStorage.hasOwnProperty("all_thread")) {
-    localStorage.setItem("all_thread", "[]");
-}
-if (!localStorage.hasOwnProperty("a_thread_info")) {
-    localStorage.setItem("a_thread_info", "{}");
-}
-
 /* utilities */
 function escapeHtml (unsafe) {
     return unsafe
@@ -56,3 +45,8 @@ function getQuery() {
             });
     return obj;
 }
+
+function is_login () {
+    return localStorage.getItem("user") === "";
+}
+
