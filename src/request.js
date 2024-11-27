@@ -10,18 +10,16 @@ async function fetch_all_thread () {
         return;
     }
 
-    alert(`スレッドのデータ取得に失敗しました。 Error: ${json_content.detail}`);
+    throw new Error(`スレッドのデータ取得に失敗しました。 Error: ${json_content.detail}`);
 }
 
 async function create_new_thread (title) {
     if (!is_login()) {
-        alert("スレッドを作成するには、ログインが必要です。");
-        return;
+        throw new Error("スレッドを作成するには、ログインが必要です。");
     }
 
     if (title === "") {
-        alert("スレッドタイトルが空です。");
-        return;
+        throw new Error("スレッドタイトルが空です。");
     }
 
     if (!confirm(`スレッド名: ${title}で作成します。よろしいですか？`)) {
@@ -36,6 +34,7 @@ async function create_new_thread (title) {
             data: {
                 title: `${title}`,
                 user: `${localStorage.getItem("user")}`,
+                password: `${localStorage.getItem("password")}`,
                 date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
             }
         })
@@ -47,7 +46,7 @@ async function create_new_thread (title) {
         return;
     }
 
-    alert(`スレッド作成に失敗しました。エラーメッセージ: ${response_detail_json.detail}`);
+    throw new Error(`スレッド作成に失敗しました。エラーメッセージ: ${response_detail_json.detail}`);
 }
 
 async function fetch_messages (title) {
@@ -58,7 +57,7 @@ async function fetch_messages (title) {
     const json_content = await response.json();
 
     if (json_content.verdict === "ERROR") {
-        alert(`スレッドデータの取得でエラーが発生しました。 Error: ${json_content.detail}`);
+        throw new Error(`スレッドデータの取得でエラーが発生しました。 Error: ${json_content.detail}`);
         return;
     }
 
@@ -66,14 +65,13 @@ async function fetch_messages (title) {
     localStorage.setItem(`${title}_messages`, JSON.stringify(json_content.data));
 };
 
-async function post_message (msg) {
+async function post_message (title, msg) {
     if (!is_login()) {
-        alert("メッセージの投稿にはログインが必要です。");
-        return;
+        throw new Error("メッセージの投稿にはログインが必要です。");
     }
 
     if (msg === "") {
-        alert("メッセージが空です。");
+        throw new Error("メッセージが空です。");
         return;
     }
 
@@ -85,6 +83,7 @@ async function post_message (msg) {
             data: {
                 title: `${title}`,
                 user: `${localStorage.getItem("user")}`,
+                password: `${localStorage.getItem("password")}`,
                 date: (new Date()).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
                 message: `${msg}`,
             }
@@ -94,7 +93,7 @@ async function post_message (msg) {
     const json_content = await response.json();
 
     if (json_content.verdict === "ERROR") {
-        alert(`メッセージの投稿でエラーが発生しました。 Error: ${json_content.detail}`);
+        throw new Error(`メッセージの投稿でエラーが発生しました。 Error: ${json_content.detail}`);
     }
 }
 
@@ -120,22 +119,14 @@ async function is_user_name_collision (name) {
 
 async function login (user_name, password) {
     if (user_name === "") {
-        alert("ユーザー名が空です。");
-        return;
+        throw new Error("ユーザー名が空です。");
     }
     if (password === "") {
-        alert("パスワードが空です。");
+        throw new Error("パスワードが空です。");
     }
 
     // 情報のフェッチ
-    let collision;
-    try {
-        collision = await is_user_name_collision(user_name);
-    }
-    catch (e) {
-        alert(`エラーが発生しました。 Error: ${e}`);
-        return;
-    }
+    let collision = await is_user_name_collision(user_name);
 
     if (collision) {
         if (!confirm(`ユーザ名: ${user_name}でログインを試みます。よろしいですか？`)) return;
@@ -159,7 +150,7 @@ async function login (user_name, password) {
     const json = await response.json();
 
     if (json.verdict === "ERROR") {
-        alert(`エラーが発生しました。Error: ${json.detail}`);
+        throw new Error(`エラーが発生しました。Error: ${json.detail}`);
         return;
     }
 

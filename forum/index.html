@@ -11,7 +11,13 @@
 
 <script>
 async function fetch_and_display_thread () {
-    await fetch_all_thread();
+    try {
+        await fetch_all_thread();
+    }
+    catch (e) {
+        alert(e);
+        return;
+    }
     display_thread();
 }
 
@@ -82,7 +88,13 @@ function main () {
         const title_input = document.getElementById("thread_title");
         const title = escapeHtml(title_input.value).trim();
         title_input.value = "";
-        await create_new_thread(title);
+        try {
+            await create_new_thread(title);
+        }
+        catch (e) {
+            alert(e);
+            return;
+        }
         fetch_and_display_thread();
     });
 

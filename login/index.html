@@ -29,6 +29,7 @@ function main () {
 
     display_current_info();
 
+    // ログインする
     document.getElementById("verify_btn").addEventListener("click", async () => {
         const user_name_input = document.getElementById("user_name");
         const password_input = document.getElementById("password");
@@ -36,11 +37,18 @@ function main () {
         const user_name = escapeHtml(user_name_input.value);
         const password = password_input.value;
 
+        try {
+            await login(user_name, password);
+        }
+        catch (e) {
+            alert(e);
+            return;
+        }
+
         // フォーム削除
         user_name_input.value = "";
         password_input.value = "";
 
-        await login();
         display_current_info();
     });
 };

@@ -47,6 +47,5 @@ function getQuery() {
 }
 
 function is_login () {
-    return localStorage.getItem("user") === "";
+    return localStorage.getItem("user") !== "";
 }
-

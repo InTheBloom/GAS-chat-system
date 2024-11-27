@@ -73,7 +73,13 @@ async function try_update_messages (title) {
     }
     localStorage.setItem(`${title}_last_updated`, `${Date.now()}`);
 
-    await fetch_messages(title);
+    try {
+        await fetch_messages(title);
+    }
+    catch (e) {
+        alert(e);
+        return;
+    }
     display_messages(title);
 }
 </script>
@@ -108,8 +114,14 @@ async function main () {
         const msg = escapeHtml(textarea.value);
         textarea.value = "";
         resize_textarea("postdata");
-        await post_message(msg);
-        await fetch_messages(title);
+        try {
+            await post_message(title, msg);
+            await fetch_messages(title);
+        }
+        catch (e) {
+            alert(e);
+            return;
+        }
         display_messages(title);
     });
 
