@@ -117,7 +117,7 @@ async function is_user_name_collision (name) {
     return json.detail === "true";
 }
 
-async function login (user_name, password) {
+async function login (user_name, password, mailaddress) {
     if (user_name === "") {
         throw new Error("ユーザー名が空です。");
     }
@@ -143,6 +143,7 @@ async function login (user_name, password) {
             data: {
                 user_name: `${user_name}`,
                 password: `${password}`,
+                mailaddress: `${mailaddress}`,
             }
         })
     });

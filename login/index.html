@@ -33,12 +33,14 @@
             document.getElementById("verify_btn").addEventListener("click", async () => {
                 const user_name_input = document.getElementById("user_name");
                 const password_input = document.getElementById("password");
+                const mailaddress_input = document.getElementById("mailaddress");
 
                 const user_name = escapeHtml(user_name_input.value);
                 const password = password_input.value;
+                const mailaddress = mailaddress_input.value;
 
                 try {
-                    await login(user_name, password);
+                    await login(user_name, password, mailaddress);
                 }
                 catch (e) {
                     alert(e);
@@ -114,6 +116,7 @@
             }
 
             button {
+                margin-top: 2.5em;
                 width: 100%;
                 padding: 10px;
                 background-color: #007bff;
@@ -160,7 +163,10 @@
             <input type="text" name="user_name" id="user_name">
 
             <label for="password">パスワード</label>
-            <input type="text" name="password" id="password">
+            <input type="password" name="password" id="password" autocomplete="current-password">
+
+            <label for="mailaddress">メールアドレス(任意)</label>
+            <input type="mailaddres" name="mailaddress" id="mailaddress">
 
             <button id="verify_btn">ログイン/サインイン</button>
         </div>
