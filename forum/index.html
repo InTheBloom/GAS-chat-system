@@ -77,6 +77,31 @@
                 transform: scale(0.97);
             }
 
+            .reload_btn_spinner {
+                display: none;
+                width: 0.5em;
+                height: 0.5em;
+                border: 3px solid white;
+                border-top: 3px solid transparent;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin-left: 10px;
+                margin: auto auto auto 10px;
+            }
+
+            .loading .reload_btn_spinner {
+                display: inline-block;
+            }
+            
+            @keyframes spin {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
             .thread-card {
                 border: 1px solid #ccc;
                 border-radius: 8px;
@@ -148,13 +173,13 @@
             }
         }
 
-        function try_update_thread() {
+        async function try_update_thread () {
             const interval_ms = 1000 * 60 * 5;
             if (Date.now() - parseInt(localStorage.getItem("last_thread_updated")) < interval_ms) {
                 return;
             }
+            await fetch_and_display_thread();
             localStorage.setItem("last_thread_updated", `${Date.now()}`);
-            fetch_and_display_thread();
         }
 
         function main() {
@@ -163,8 +188,7 @@
                 return;
             }
 
-            const btn = document.getElementById("create_thread_btn");
-            btn.addEventListener("click", async () => {
+            document.getElementById("create_thread_btn").addEventListener("click", async () => {
                 const title_input = document.getElementById("thread_title");
                 const title = escapeHtml(title_input.value).trim();
                 title_input.value = "";
@@ -175,6 +199,21 @@
                     return;
                 }
                 fetch_and_display_thread();
+            });
+
+            // 再読込ボタン(last_thread_updatedをいじって強制的にイベントを発火させる)
+            const reload_btn = document.getElementById("reload_btn");
+            reload_btn.addEventListener("click", async () => {
+                reload_btn.classList.add("loading");
+                try {
+                    await fetch_and_display_thread();
+                }
+                catch (e) {
+                    alert(e);
+                }
+                finally {
+                    reload_btn.classList.remove("loading");
+                }
             });
 
             display_thread();
@@ -199,7 +238,12 @@
             <button id="create_thread_btn">スレッドを作成</button>
 
             <hr>
-            <h2>スレッド一覧(新着順)</h2>
+            <div style="display: flex;">
+                <h2>スレッド一覧(新着順)</h2>
+                <div style="margin: auto 1em;">
+                    <button id="reload_btn">再読み込み<span class="reload_btn_spinner"></span></button>
+                </div>
+            </div>
             <div id="viewer"></div>
         </div>
     </body>

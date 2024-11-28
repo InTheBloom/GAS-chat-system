@@ -70,6 +70,31 @@
             background-color: #3e8e41;
         }
 
+        .reload_btn_spinner {
+            display: none;
+            width: 0.5em;
+            height: 0.5em;
+            border: 3px solid white;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+            margin: auto auto auto 10px;
+        }
+
+        .loading .reload_btn_spinner {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         #viewer > div {
             padding: 15px;
             border-bottom: 1px solid #ddd;
@@ -179,7 +204,6 @@ async function try_update_messages (title) {
     if (Date.now() - last < interval_ms) {
         return;
     }
-    localStorage.setItem(`${title}_last_updated`, `${Date.now()}`);
 
     try {
         await fetch_messages(title);
@@ -189,6 +213,7 @@ async function try_update_messages (title) {
         return;
     }
     display_messages(title);
+    localStorage.setItem(`${title}_last_updated`, `${Date.now()}`);
 }
 </script>
 
@@ -234,6 +259,22 @@ async function main () {
         display_messages(title);
     });
 
+    // ボタンを押したら更新が走る。
+    const reload_btn = document.getElementById("reload_btn");
+    reload_btn.addEventListener("click", async () => {
+        reload_btn.classList.add("loading");
+        try {
+            await fetch_messages(title);
+            display_messages(title);
+        }
+        catch (e) {
+            alert(e);
+        }
+        finally {
+            reload_btn.classList.remove("loading");
+        }
+    });
+
     // localStorage分を表示
     display_messages(title);
 
@@ -273,11 +314,12 @@ document.addEventListener("DOMContentLoaded", () => main());
 
     <hr>
 
-    <h2>過去ログ(新着順)</h2>
+    <div style="display: flex;">
+        <h2>過去ログ(新着順)</h2>
+        <div style="margin: 0 1em;">
+            <button id="reload_btn">再読み込み<span class="reload_btn_spinner"></span></button>
+        </div>
+    </div>
     <div id="viewer"></div>
-
-    <script>
-    // JavaScriptコードは省略しましたが、既存のものをそのまま使用可能です。
-    </script>
 </body>
 </html>
