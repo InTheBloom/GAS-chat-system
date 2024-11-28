@@ -250,11 +250,15 @@ async function main () {
         resize_textarea("postdata");
         try {
             await post_message(title, msg);
+        }
+        catch (e) {
+            alert(e);
+        }
+        try {
             await fetch_messages(title);
         }
         catch (e) {
             alert(e);
-            return;
         }
         display_messages(title);
     });
