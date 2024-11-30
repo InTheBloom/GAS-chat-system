@@ -92,9 +92,14 @@ async function post_message (title, msg) {
 
     const json_content = await response.json();
 
+    if (json_content.verdict === "OK") {
+        return;
+    }
+
     if (json_content.verdict === "ERROR") {
         throw new Error(`メッセージの投稿でエラーが発生しました。 Error: ${json_content.detail}`);
     }
+    throw new Error(`ステータス: ${json_content.verdict} メッセージ: ${json_content.detail}`);
 }
 
 async function is_user_name_collision (name) {
