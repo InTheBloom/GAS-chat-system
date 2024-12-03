@@ -9,131 +9,6 @@
         <script src="/src/variables.js"></script>
         <script src="/src/request.js"></script>
         
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f0f2f5;
-                margin: 0;
-                padding: 0;
-            }
-
-            .container {
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 2em;
-                font-weight: 700;
-                color: #333;
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
-            h2 {
-                font-size: 1.5em;
-                color: #444;
-            }
-
-            hr {
-                border: 1px solid #ddd;
-                margin: 20px 0;
-            }
-
-            label {
-                font-size: 1.2em;
-                color: #555;
-                display: block;
-                margin: 10px 0;
-            }
-
-            input[type="text"] {
-                width: 100%;
-                padding: 10px;
-                font-size: 1.1em;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                box-sizing: border-box;
-                margin-bottom: 20px;
-            }
-
-            button {
-                padding: 10px 20px;
-                background-color: #007bff;
-                color: white;
-                font-size: 1.1em;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: transform 0.2s ease, background-color 0.3s ease;
-            }
-
-            button:hover {
-                background-color: #0056b3;
-            }
-
-            button:active {
-                transform: scale(0.97);
-            }
-
-            .reload_btn_spinner {
-                display: none;
-                width: 0.5em;
-                height: 0.5em;
-                border: 3px solid white;
-                border-top: 3px solid transparent;
-                border-radius: 50%;
-                animation: spin 0.8s linear infinite;
-                margin-left: 10px;
-                margin: auto auto auto 10px;
-            }
-
-            .loading .reload_btn_spinner {
-                display: inline-block;
-            }
-            
-            @keyframes spin {
-                from {
-                    transform: rotate(0deg);
-                }
-                to {
-                    transform: rotate(360deg);
-                }
-            }
-
-            .thread-card {
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                padding: 15px;
-                margin: 15px 0;
-                background-color: #fff;
-                box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                transition: box-shadow 0.3s ease;
-            }
-
-            .thread-card:hover {
-                box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2);
-            }
-
-            .thread-title {
-                font-size: 1.3em;
-                font-weight: 600;
-                color: #333;
-                margin-bottom: 8px;
-            }
-
-            .thread-info {
-                margin-bottom: 5px;
-                color: #555;
-            }
-
-            .thread-info span {
-                font-weight: bold;
-            }
-        </style>
-
         <script>
         async function fetch_and_display_thread() {
             try {
@@ -163,10 +38,10 @@
             for (const thread of all_thread) {
                 const threadHTML = `
                     <a href="thread/?title=${thread.title}" style="text-decoration: none;">
-                        <div class="thread-card">
-                            <div class="thread-title">${thread.title}</div>
-                            <div class="thread-info"><span>Creator:</span> ${thread.creator}</div>
-                            <div class="thread-info"><span>Last Update:</span> ${thread.updated_at} (${formatRelativeTime(new Date(thread.updated_at))})</div>
+                        <div>
+                            <div>${thread.title}</div>
+                            <div><span>Creator:</span> ${thread.creator}</div>
+                            <div><span>Last Update:</span> ${thread.updated_at} (${formatRelativeTime(new Date(thread.updated_at))})</div>
                         </div>
                     </a>`;
                 viewer.innerHTML += threadHTML;
@@ -204,7 +79,6 @@
             // 再読込ボタン(last_thread_updatedをいじって強制的にイベントを発火させる)
             const reload_btn = document.getElementById("reload_btn");
             reload_btn.addEventListener("click", async () => {
-                reload_btn.classList.add("loading");
                 try {
                     await fetch_and_display_thread();
                 }
@@ -212,7 +86,6 @@
                     alert(e);
                 }
                 finally {
-                    reload_btn.classList.remove("loading");
                 }
             });
 
@@ -228,7 +101,7 @@
     </head>
 
     <body>
-        <div class="container">
+        <div>
             <h1>掲示板(仮)</h1>
             <hr>
 
@@ -240,8 +113,8 @@
             <hr>
             <div style="display: flex;">
                 <h2>スレッド一覧(新着順)</h2>
-                <div style="margin: auto 1em;">
-                    <button id="reload_btn">再読み込み<span class="reload_btn_spinner"></span></button>
+                <div>
+                    <button id="reload_btn">再読み込み</button>
                 </div>
             </div>
             <div id="viewer"></div>
