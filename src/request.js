@@ -102,13 +102,13 @@ async function post_message (title, msg) {
     throw new Error(`ステータス: ${json_content.verdict} メッセージ: ${json_content.detail}`);
 }
 
-async function is_user_name_collision (name) {
+async function is_user_collision (name) {
     const response = await fetch(gas_app_url, {
         method: "POST",
         body: JSON.stringify({
             type: "is-user-collision",
             data: {
-                user_name: `${name}`,
+                user: `${name}`,
             }
         })
     });
@@ -122,8 +122,8 @@ async function is_user_name_collision (name) {
     return json.detail === "true";
 }
 
-async function login (user_name, password, mailaddress) {
-    if (user_name === "") {
+async function login (user, password) {
+    if (user === "") {
         throw new Error("ユーザー名が空です。");
     }
     if (password === "") {
@@ -131,13 +131,13 @@ async function login (user_name, password, mailaddress) {
     }
 
     // 情報のフェッチ
-    let collision = await is_user_name_collision(user_name);
+    let collision = await is_user_collision(user);
 
     if (collision) {
-        if (!confirm(`ユーザ名: ${user_name}でログインを試みます。よろしいですか？`)) return;
+        if (!confirm(`ユーザ名: ${user}でログインを試みます。よろしいですか？`)) return;
     }
     else {
-        if (!confirm(`ユーザ名: ${user_name}でアカウントを作成します。よろしいですか？`)) return;
+        if (!confirm(`ユーザ名: ${user}でアカウントを作成します。よろしいですか？`)) return;
     }
 
     // ログインクエリ
@@ -146,9 +146,8 @@ async function login (user_name, password, mailaddress) {
         body: JSON.stringify({
             type: "login",
             data: {
-                user_name: `${user_name}`,
+                user: `${user}`,
                 password: `${password}`,
-                mailaddress: `${mailaddress}`,
             }
         })
     });
@@ -163,6 +162,28 @@ async function login (user_name, password, mailaddress) {
     alert(`成功しました。 Message: ${json.detail}`);
 
     // LocalStorageに反映
-    localStorage.setItem("user", user_name);
+    localStorage.setItem("user", user);
     localStorage.setItem("password", password);
+}
+
+async function temporary_register_mailaddress (user, password, mailaddress) {
+    const response = await fetch(gas_app_url, {
+        method: "POST",
+        body: JSON.stringify({
+            type: "temporary-register-mailaddress",
+            data: {
+                user: `${user}`,
+                password: `${password}`,
+                mailaddress: `${mailaddress}`,
+            }
+        })
+    });
+
+    const json = await response.json();
+    if (json.verdict === "OK") {
+        alert("仮登録が完了しました。登録したメールアドレスに本登録用のメールを送信しました。");
+        return;
+    }
+
+    throw new Error(json.detail);
 }

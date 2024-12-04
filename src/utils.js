@@ -47,7 +47,7 @@ function getQuery() {
 }
 
 function is_login () {
-    return localStorage.getItem("user") !== "";
+    return localStorage.hasOwnProperty("user");
 }
 
 // 投稿日時を相対的な形式（例：1分前、2時間前）で表示する関数

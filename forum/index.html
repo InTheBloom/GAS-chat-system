@@ -65,7 +65,7 @@
 
             document.getElementById("create_thread_btn").addEventListener("click", async () => {
                 const title_input = document.getElementById("thread_title");
-                const title = escapeHtml(title_input.value).trim();
+                const title = title_input.value;
                 title_input.value = "";
                 try {
                     await create_new_thread(title);

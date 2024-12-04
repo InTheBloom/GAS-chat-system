@@ -1,5 +1,5 @@
 /* Variables */
-const gas_app_url = "https://script.google.com/macros/s/AKfycbwa5vNmV2lbCs7EyBgwhOcAn13xxtL4zoB34ra8o08ObYGF3UmWV1zEdtvIsgqc5sUD5Q/exec";
+const gas_app_url = "https://script.google.com/macros/s/AKfycbw7TovM20PA2X3brG3Ip1DfLwnRizXxuO46NCoBtufqpNJ63E5ZoGNX0p2BJs262mlvvg/exec";
 
 const main_page = "/";
 const forum_page = "/forum/";

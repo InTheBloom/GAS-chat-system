@@ -11,10 +11,10 @@
 
         <script>
         function display_current_info () {
-            const current_user_name_frame = document.getElementById("current_user_name");
+            const current_user_frame = document.getElementById("current_user");
             const current_password_frame = document.getElementById("current_password");
 
-            current_user_name_frame.innerHTML = localStorage.getItem("user");
+            current_user_frame.innerHTML = localStorage.getItem("user");
             current_password_frame.innerHTML = localStorage.getItem("password");
         }
         </script>
@@ -31,16 +31,14 @@
 
             // ログインする
             document.getElementById("verify_btn").addEventListener("click", async () => {
-                const user_name_input = document.getElementById("user_name");
+                const user_input = document.getElementById("user");
                 const password_input = document.getElementById("password");
-                const mailaddress_input = document.getElementById("mailaddress");
 
-                const user_name = escapeHtml(user_name_input.value);
+                const user = user_input.value;
                 const password = password_input.value;
-                const mailaddress = mailaddress_input.value;
 
                 try {
-                    await login(user_name, password, mailaddress);
+                    await login(user, password);
                 }
                 catch (e) {
                     alert(e);
@@ -48,7 +46,7 @@
                 }
 
                 // フォーム削除
-                user_name_input.value = "";
+                user_input.value = "";
                 password_input.value = "";
 
                 display_current_info();
@@ -69,19 +67,16 @@
 
             <h2>現在のログイン情報</h2>
             <div>
-                <p>ユーザ名: <span id="current_user_name"></span></p>
+                <p>ユーザ名: <span id="current_user"></span></p>
                 <p>パスワード: <span id="current_password"></span></p>
             </div>
 
             <h2>ログイン/新規ユーザ作成</h2>
-            <label for="user_name">ユーザ名</label>
-            <input type="text" name="user_name" id="user_name">
+            <label for="user">ユーザ名</label>
+            <input type="text" name="user" id="user">
 
             <label for="password">パスワード</label>
             <input type="password" name="password" id="password" autocomplete="current-password">
-
-            <label for="mailaddress">メールアドレス(任意)</label>
-            <input type="mailaddres" name="mailaddress" id="mailaddress">
 
             <button id="verify_btn">ログイン/サインイン</button>
         </div>

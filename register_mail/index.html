@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>メールアドレス登録</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="/src/utils.js"></script>
+        <script src="/src/variables.js"></script>
+        <script src="/src/request.js"></script>
+
+        <script>
+        function display_current_info () {
+            const current_user_name_frame = document.getElementById("current_user_name");
+            const current_password_frame = document.getElementById("current_password");
+
+            current_user_name_frame.innerHTML = localStorage.getItem("user");
+            current_password_frame.innerHTML = localStorage.getItem("password");
+        }
+        </script>
+
+        <script>
+        /* Entry point */
+        function main () {
+            if (!storageAvailable("localStorage")) {
+                alert("ログイン機能を利用するためにはlocalStorageが有効である必要があります。");
+                return;
+            }
+            if (!is_login()) {
+                alert("メールアドレス登録にはログインが必要です。");
+                window.location = main_page;
+                return;
+            }
+
+            // アドレスを登録
+            document.getElementById("send").addEventListener("click", async () => {
+                const user = localStorage.getItem("user");
+                const password = localStorage.getItem("password");
+                const mailaddress_input = document.getElementById("mailaddress");
+                const mailaddress = mailaddress_input.value;
+
+                if (mailaddress === "") {
+                    alert("アドレスが空です。");
+                    return;
+                }
+
+                try {
+                    await temporary_register_mailaddress(user, password, mailaddress);
+                }
+                catch (e) {
+                    alert(e);
+                    return;
+                }
+
+                // フォーム削除
+                mailaddress.value = "";
+
+                // リダイレクト
+                window.location = main_page;
+            });
+        };
+
+        document.addEventListener("DOMContentLoaded", () => main());
+        </script>
+
+    </head>
+
+    <body>
+        <div>
+            <h2>登録したいアドレス</h2>
+            <label for="mailaddress">アドレス</label>
+            <input type="text" name="mailaddress" id="mailaddress">
+
+            <button id="send">登録</button>
+        </div>
+    </body>
+</html>
+

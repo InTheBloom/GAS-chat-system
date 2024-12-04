@@ -64,7 +64,7 @@ function display_messages(title) {
                     <div>${post.author}</div>
                     <div>${post.postdate} (${relativeTime})</div>
                 </div>
-                <pre>${post.message}</pre>
+                <pre>${escapeHtml(post.message)}</pre>
             </div>
         `;
     }
@@ -117,13 +117,13 @@ async function main () {
     }
 
     // スレッド名表示
-    document.getElementById("thread_title").innerHTML = `${title}`;
+    document.getElementById("thread_title").innerHTML = `${escapeHtml(title)}`;
 
     // 投稿機能
     const btn = document.getElementById("upload_button");
     btn.addEventListener("click", async () => {
         const textarea = document.getElementById("postdata");
-        const msg = escapeHtml(textarea.value);
+        const msg = textarea.value;
         textarea.value = "";
         resize_textarea("postdata");
         try {
